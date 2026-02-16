@@ -7,72 +7,19 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family:Arial;
-  background:linear-gradient(135deg,#0f172a,#1e293b);
-  color:white;
-}
-header{
-  background:#111827;
-  padding:15px;
-  text-align:center;
-  font-size:20px;
-  font-weight:bold;
-}
-.container{
-  max-width:600px;
-  margin:auto;
-  padding:20px;
-}
-.card{
-  background:#1e293b;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:15px;
-  box-shadow:0 5px 15px rgba(0,0,0,0.3);
-}
-input,button{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border:none;
-  border-radius:8px;
-}
-input{
-  background:#334155;
-  color:white;
-}
-button{
-  background:#22c55e;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-}
+body{font-family:Arial;background:#0f172a;color:white}
+header{background:#111827;padding:15px;text-align:center;font-weight:bold}
+.container{max-width:700px;margin:auto;padding:20px}
+.card{background:#1e293b;padding:15px;border-radius:12px;margin-bottom:15px}
+input,button{width:100%;padding:10px;margin:6px 0;border:none;border-radius:8px}
+input{background:#334155;color:white}
+button{background:#22c55e;color:white;font-weight:bold;cursor:pointer}
 button:hover{opacity:0.8}
 .admin-panel{display:none}
-.list{
-  max-height:150px;
-  overflow:auto;
-  background:#0f172a;
-  padding:10px;
-  border-radius:8px;
-}
-.resultado{
-  font-size:20px;
-  text-align:center;
-  margin-top:15px;
-  min-height:40px;
-}
-.animando{
-  animation:piscar 0.3s infinite alternate;
-}
-@keyframes piscar{
-  from{color:#22c55e;}
-  to{color:#facc15;}
-}
-.logout{
-  background:#ef4444;
-}
+.list{background:#020617;padding:10px;border-radius:8px}
+.resultado{text-align:center;font-size:20px;margin-top:10px}
+.logout{background:#ef4444}
+.roleta{font-size:24px;text-align:center;margin:10px}
 </style>
 </head>
 <body>
@@ -82,33 +29,51 @@ button:hover{opacity:0.8}
 <div class="container">
 
 <div class="card">
-<h3>Participar</h3>
-<input type="text" id="nome" placeholder="Seu nome">
-<input type="number" id="numero" placeholder="Número (1-50)">
+<h3>Participar da Rifa</h3>
+<input id="nome" placeholder="Nome">
+<input id="telefone" placeholder="Telefone">
+<input id="numero" type="number" placeholder="Número">
 <button onclick="participar()">Participar</button>
+
+<p id="valorInfo"></p>
+<p id="infoCriador"></p>
+<p id="infoPix"></p>
 </div>
 
 <div class="card" id="loginCard">
 <h3>Login Admin</h3>
-<input type="text" id="user" placeholder="Usuário">
-<input type="password" id="pass" placeholder="Senha">
+<input id="user" placeholder="Usuário">
+<input id="pass" type="password" placeholder="Senha">
 <button onclick="login()">Entrar</button>
 </div>
 
 <div class="card admin-panel" id="adminPanel">
-<h3>Painel Administrativo</h3>
 
-<button onclick="sortear()">🎲 Realizar Sorteio</button>
-<button onclick="limpar()">🗑 Limpar Participantes</button>
-<button class="logout" onclick="logout()">🚪 Logout</button>
+<h3>Painel Admin</h3>
+<p id="cargo"></p>
+
+<h4>Criar categoria de rifa</h4>
+<input id="catNome" placeholder="Nome categoria">
+<input id="catValor" type="number" placeholder="Valor da rifa">
+<button onclick="criarCategoria()">Criar</button>
+
+<input id="pixRifa" placeholder="Chave PIX da rifa">
+<button onclick="alterarPix()">Salvar PIX</button>
+
+<button onclick="apagarRifa()">Apagar Rifa</button>
+
+<h4>Roleta</h4>
+<div class="roleta" id="roleta">0</div>
+<button onclick="rodarRoleta()">Girar Roleta</button>
+
+<button onclick="sortear()">Sortear</button>
+<button onclick="limpar()">Limpar</button>
+<button class="logout" onclick="logout()">Logout</button>
 
 <h4>Participantes</h4>
 <div class="list" id="lista"></div>
 
 <div class="resultado" id="resultado"></div>
-
-<h4>Histórico</h4>
-<div class="list" id="historico"></div>
 
 </div>
 
@@ -116,100 +81,164 @@ button:hover{opacity:0.8}
 
 <script>
 
-// LOGIN FIXO
-const ADMIN_USER = "Admin";
-const ADMIN_PASS = "Luxo";
+/* ===== ADMINS ===== */
+let admins = JSON.parse(localStorage.getItem("admins")) || [
+  {user:"Angel", pass:"Admin", cargo:"dono"},
+  {user:"BAKK", pass:"0999", cargo:"dono"},
+  {user:"Yure", pass:"0999", cargo:"moderador"}
+];
 
+let adminAtual = null;
+
+/* ===== RIFA ===== */
 let participantes = JSON.parse(localStorage.getItem("participantes")) || [];
-let historico = JSON.parse(localStorage.getItem("historico")) || [];
+let categoria = JSON.parse(localStorage.getItem("categoria")) || {
+  nome: "Rifa Padrão",
+  valor: 0,
+  pix: "",
+  criador: "Sistema",
+  visivel: true
+};
 
 function salvar(){
-  localStorage.setItem("participantes",JSON.stringify(participantes));
-  localStorage.setItem("historico",JSON.stringify(historico));
+ localStorage.setItem("participantes",JSON.stringify(participantes));
+ localStorage.setItem("categoria",JSON.stringify(categoria));
+ localStorage.setItem("admins",JSON.stringify(admins));
 }
 
-function atualizar(){
-  const lista=document.getElementById("lista");
-  lista.innerHTML="";
-  participantes.forEach(p=>{
-    lista.innerHTML+=`<p>${p.nome} - ${p.numero}</p>`;
-  });
-
-  const hist=document.getElementById("historico");
-  hist.innerHTML="";
-  historico.forEach(h=>{
-    hist.innerHTML+=`<p>🏆 ${h.nome} (${h.numero}) - ${h.data}</p>`;
-  });
-}
-
+/* ===== PARTICIPAÇÃO ===== */
 function participar(){
-  const nome=document.getElementById("nome").value.trim();
-  const numero=parseInt(document.getElementById("numero").value);
+ let nome = getVal("nome");
+ let telefone = getVal("telefone");
+ let numero = parseInt(getVal("numero"));
 
-  if(!nome||!numero) return alert("Preencha todos os campos!");
-  if(numero<1||numero>50) return alert("Número inválido!");
-  if(participantes.some(p=>p.numero===numero))
-    return alert("Número já escolhido!");
+ if(!nome || !telefone || !numero)
+   return alert("Preencha tudo!");
 
-  participantes.push({nome,numero});
-  salvar();
-  atualizar();
-  alert("Participação confirmada!");
+ if(participantes.some(p=>p.numero==numero))
+   return alert("Número já usado!");
+
+ participantes.push({nome,telefone,numero});
+ salvar();
+ atualizar();
 }
 
+function getVal(id){
+ return document.getElementById(id).value.trim();
+}
+
+/* ===== LOGIN ===== */
 function login(){
-  const u=document.getElementById("user").value;
-  const p=document.getElementById("pass").value;
+ let u = getVal("user");
+ let p = getVal("pass");
 
-  if(u===ADMIN_USER && p===ADMIN_PASS){
-    document.getElementById("adminPanel").style.display="block";
-    document.getElementById("loginCard").style.display="none";
-    atualizar();
-  }else{
-    alert("Usuário ou senha incorretos!");
-  }
+ let admin = admins.find(a=>a.user===u && a.pass===p);
+ if(!admin) return alert("Login inválido");
+
+ adminAtual = admin;
+
+ document.getElementById("cargo").innerText =
+   "Cargo: "+admin.cargo;
+
+ document.getElementById("adminPanel").style.display="block";
+ document.getElementById("loginCard").style.display="none";
+
+ atualizar();
 }
 
-function logout(){
-  location.reload();
+/* ===== CRIAR RIFA ===== */
+function criarCategoria(){
+ categoria.nome = getVal("catNome");
+ categoria.valor = parseFloat(getVal("catValor"));
+ categoria.criador = adminAtual.user;
+ salvar();
+ atualizar();
 }
 
+/* ===== ALTERAR PIX ===== */
+function alterarPix(){
+ if(!adminAtual) return alert("Somente admins!");
+ categoria.pix = getVal("pixRifa");
+ salvar();
+ atualizar();
+ alert("PIX atualizado!");
+}
+
+/* ===== APAGAR RIFA ===== */
+function apagarRifa(){
+ if(!adminAtual) return;
+
+ if(
+   adminAtual.cargo !== "dono" &&
+   adminAtual.user !== categoria.criador
+ ){
+   return alert("Somente criador ou dono pode apagar!");
+ }
+
+ categoria = {
+   nome: "Rifa Padrão",
+   valor: 0,
+   pix: "",
+   criador: "Sistema",
+   visivel: true
+ };
+
+ salvar();
+ atualizar();
+ alert("Rifa apagada!");
+}
+
+/* ===== ROLETA ===== */
+function rodarRoleta(){
+ let n = Math.floor(Math.random()*50)+1;
+ document.getElementById("roleta").innerText = n;
+}
+
+/* ===== LISTAS ===== */
+function atualizar(){
+
+ document.getElementById("valorInfo").innerText =
+ categoria.valor==0
+ ? "Rifa gratuita"
+ : "Valor da rifa: R$"+categoria.valor;
+
+ document.getElementById("infoCriador").innerText =
+ "Rifa criada por: "+categoria.criador;
+
+ document.getElementById("infoPix").innerText =
+ categoria.valor>0
+ ? "PIX para pagamento: "+categoria.pix
+ : "";
+
+ let lista=document.getElementById("lista");
+ lista.innerHTML="";
+ participantes.forEach(p=>{
+  lista.innerHTML += `<p>${p.nome} - ${p.numero} - ${p.telefone}</p>`;
+ });
+}
+
+/* ===== SORTEIO ===== */
 function sortear(){
-  if(participantes.length===0)
-    return alert("Sem participantes!");
+ if(participantes.length==0)
+   return alert("Sem participantes");
 
-  const resultadoDiv=document.getElementById("resultado");
-  resultadoDiv.classList.add("animando");
+ let v = participantes[Math.floor(Math.random()*participantes.length)];
 
-  let contador=0;
-  const intervalo=setInterval(()=>{
-    const temp=participantes[Math.floor(Math.random()*participantes.length)];
-    resultadoDiv.innerHTML=`🎲 Sorteando... ${temp.nome} (${temp.numero})`;
-    contador++;
+ document.getElementById("resultado").innerText =
+ "Vencedor: "+v.nome+" ("+v.numero+")";
 
-    if(contador>15){
-      clearInterval(intervalo);
-
-      const vencedor=participantes[Math.floor(Math.random()*participantes.length)];
-      const data=new Date().toLocaleString();
-
-      historico.push({...vencedor,data});
-      participantes=[];
-      salvar();
-      atualizar();
-
-      resultadoDiv.classList.remove("animando");
-      resultadoDiv.innerHTML=`🏆 VENCEDOR: ${vencedor.nome} (${vencedor.numero}) 🎉`;
-    }
-
-  },150);
+ participantes=[];
+ salvar();
+ atualizar();
 }
 
 function limpar(){
-  participantes=[];
-  salvar();
-  atualizar();
+ participantes=[];
+ salvar();
+ atualizar();
 }
+
+function logout(){ location.reload(); }
 
 atualizar();
 
