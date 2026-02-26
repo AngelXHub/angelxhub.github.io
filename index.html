@@ -1,248 +1,55 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sorteio Luxo</title>
+    <meta charset="UTF-8">
+    <title>Aura 22</title>
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial;background:#0f172a;color:white}
-header{background:#111827;padding:15px;text-align:center;font-weight:bold}
-.container{max-width:700px;margin:auto;padding:20px}
-.card{background:#1e293b;padding:15px;border-radius:12px;margin-bottom:15px}
-input,button{width:100%;padding:10px;margin:6px 0;border:none;border-radius:8px}
-input{background:#334155;color:white}
-button{background:#22c55e;color:white;font-weight:bold;cursor:pointer}
-button:hover{opacity:0.8}
-.admin-panel{display:none}
-.list{background:#020617;padding:10px;border-radius:8px}
-.resultado{text-align:center;font-size:20px;margin-top:10px}
-.logout{background:#ef4444}
-.roleta{font-size:24px;text-align:center;margin:10px}
-</style>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .titulo {
+            font-size: 100px;
+            font-weight: bold;
+            margin-top: 60px;
+            background: linear-gradient(90deg, red, orange, yellow, green, blue, purple);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: animacao 4s infinite linear;
+        }
+
+        @keyframes animacao {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        .imagem {
+            margin-top: 50px;
+        }
+
+        .imagem img {
+            width: 500px;
+            max-width: 90%;
+            border-radius: 20px;
+            box-shadow: 0 0 40px cyan;
+        }
+    </style>
 </head>
+
 <body>
 
-<header>🎲 Sorteio Luxo Online</header>
+    <div class="titulo">
+        AURA 22
+    </div>
 
-<div class="container">
-
-<div class="card">
-<h3>Participar da Rifa</h3>
-<input id="nome" placeholder="Nome">
-<input id="telefone" placeholder="Telefone">
-<input id="numero" type="number" placeholder="Número">
-<button onclick="participar()">Participar</button>
-
-<p id="valorInfo"></p>
-<p id="infoCriador"></p>
-<p id="infoPix"></p>
-</div>
-
-<div class="card" id="loginCard">
-<h3>Login Admin</h3>
-<input id="user" placeholder="Usuário">
-<input id="pass" type="password" placeholder="Senha">
-<button onclick="login()">Entrar</button>
-</div>
-
-<div class="card admin-panel" id="adminPanel">
-
-<h3>Painel Admin</h3>
-<p id="cargo"></p>
-
-<h4>Criar categoria de rifa</h4>
-<input id="catNome" placeholder="Nome categoria">
-<input id="catValor" type="number" placeholder="Valor da rifa">
-<button onclick="criarCategoria()">Criar</button>
-
-<input id="pixRifa" placeholder="Chave PIX da rifa">
-<button onclick="alterarPix()">Salvar PIX</button>
-
-<button onclick="apagarRifa()">Apagar Rifa</button>
-
-<h4>Roleta</h4>
-<div class="roleta" id="roleta">0</div>
-<button onclick="rodarRoleta()">Girar Roleta</button>
-
-<button onclick="sortear()">Sortear</button>
-<button onclick="limpar()">Limpar</button>
-<button class="logout" onclick="logout()">Logout</button>
-
-<h4>Participantes</h4>
-<div class="list" id="lista"></div>
-
-<div class="resultado" id="resultado"></div>
-
-</div>
-
-</div>
-
-<script>
-
-/* ===== ADMINS ===== */
-let admins = JSON.parse(localStorage.getItem("admins")) || [
-  {user:"Angel", pass:"Admin", cargo:"dono"},
-  {user:"BAKK", pass:"0999", cargo:"dono"},
-  {user:"Yure", pass:"0999", cargo:"moderador"}
-];
-
-let adminAtual = null;
-
-/* ===== RIFA ===== */
-let participantes = JSON.parse(localStorage.getItem("participantes")) || [];
-let categoria = JSON.parse(localStorage.getItem("categoria")) || {
-  nome: "Rifa Padrão",
-  valor: 0,
-  pix: "",
-  criador: "Sistema",
-  visivel: true
-};
-
-function salvar(){
- localStorage.setItem("participantes",JSON.stringify(participantes));
- localStorage.setItem("categoria",JSON.stringify(categoria));
- localStorage.setItem("admins",JSON.stringify(admins));
-}
-
-/* ===== PARTICIPAÇÃO ===== */
-function participar(){
- let nome = getVal("nome");
- let telefone = getVal("telefone");
- let numero = parseInt(getVal("numero"));
-
- if(!nome || !telefone || !numero)
-   return alert("Preencha tudo!");
-
- if(participantes.some(p=>p.numero==numero))
-   return alert("Número já usado!");
-
- participantes.push({nome,telefone,numero});
- salvar();
- atualizar();
-}
-
-function getVal(id){
- return document.getElementById(id).value.trim();
-}
-
-/* ===== LOGIN ===== */
-function login(){
- let u = getVal("user");
- let p = getVal("pass");
-
- let admin = admins.find(a=>a.user===u && a.pass===p);
- if(!admin) return alert("Login inválido");
-
- adminAtual = admin;
-
- document.getElementById("cargo").innerText =
-   "Cargo: "+admin.cargo;
-
- document.getElementById("adminPanel").style.display="block";
- document.getElementById("loginCard").style.display="none";
-
- atualizar();
-}
-
-/* ===== CRIAR RIFA ===== */
-function criarCategoria(){
- categoria.nome = getVal("catNome");
- categoria.valor = parseFloat(getVal("catValor"));
- categoria.criador = adminAtual.user;
- salvar();
- atualizar();
-}
-
-/* ===== ALTERAR PIX ===== */
-function alterarPix(){
- if(!adminAtual) return alert("Somente admins!");
- categoria.pix = getVal("pixRifa");
- salvar();
- atualizar();
- alert("PIX atualizado!");
-}
-
-/* ===== APAGAR RIFA ===== */
-function apagarRifa(){
- if(!adminAtual) return;
-
- if(
-   adminAtual.cargo !== "dono" &&
-   adminAtual.user !== categoria.criador
- ){
-   return alert("Somente criador ou dono pode apagar!");
- }
-
- categoria = {
-   nome: "Rifa Padrão",
-   valor: 0,
-   pix: "",
-   criador: "Sistema",
-   visivel: true
- };
-
- salvar();
- atualizar();
- alert("Rifa apagada!");
-}
-
-/* ===== ROLETA ===== */
-function rodarRoleta(){
- let n = Math.floor(Math.random()*50)+1;
- document.getElementById("roleta").innerText = n;
-}
-
-/* ===== LISTAS ===== */
-function atualizar(){
-
- document.getElementById("valorInfo").innerText =
- categoria.valor==0
- ? "Rifa gratuita"
- : "Valor da rifa: R$"+categoria.valor;
-
- document.getElementById("infoCriador").innerText =
- "Rifa criada por: "+categoria.criador;
-
- document.getElementById("infoPix").innerText =
- categoria.valor>0
- ? "PIX para pagamento: "+categoria.pix
- : "";
-
- let lista=document.getElementById("lista");
- lista.innerHTML="";
- participantes.forEach(p=>{
-  lista.innerHTML += `<p>${p.nome} - ${p.numero} - ${p.telefone}</p>`;
- });
-}
-
-/* ===== SORTEIO ===== */
-function sortear(){
- if(participantes.length==0)
-   return alert("Sem participantes");
-
- let v = participantes[Math.floor(Math.random()*participantes.length)];
-
- document.getElementById("resultado").innerText =
- "Vencedor: "+v.nome+" ("+v.numero+")";
-
- participantes=[];
- salvar();
- atualizar();
-}
-
-function limpar(){
- participantes=[];
- salvar();
- atualizar();
-}
-
-function logout(){ location.reload(); }
-
-atualizar();
-
-</script>
+    <div class="imagem">
+        <img src="Aura22.jpg" alt="Aura22">
+    </div>
 
 </body>
 </html>
