@@ -1,83 +1,106 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Aura 22</title>
+<meta charset="UTF-8">
+<title>Aura 22</title>
 
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            text-align: center;
-            font-family: Arial, sans-serif;
-        }
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
 
-        .titulo {
-            font-size: 90px;
-            font-weight: bold;
-            margin-top: 50px;
-            background: linear-gradient(90deg, red, orange, yellow, green, blue, purple);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: animacao 4s infinite linear;
-        }
+.titulo {
+    font-size: 90px;
+    font-weight: bold;
+    margin-top: 50px;
+    background: linear-gradient(90deg, red, orange, yellow, green, blue, purple);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: animacao 4s infinite linear;
+}
 
-        @keyframes animacao {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
-        }
+@keyframes animacao {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
 
-        .principal {
-            margin-top: 40px;
-        }
+.galeria {
+    margin-top: 50px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
 
-        .principal img {
-            width: 500px;
-            max-width: 90%;
-            border-radius: 20px;
-            box-shadow: 0 0 40px cyan;
-        }
+.galeria img {
+    width: 250px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px purple;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
 
-        .galeria {
-            margin-top: 50px;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
+.galeria img:hover {
+    transform: scale(1.1);
+}
 
-        .galeria img {
-            width: 250px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px purple;
-            transition: transform 0.3s;
-        }
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    padding-top: 60px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+}
 
-        .galeria img:hover {
-            transform: scale(1.1);
-        }
-    </style>
+.modal img {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 800px;
+    border-radius: 20px;
+}
+
+</style>
 </head>
 
 <body>
 
-    <div class="titulo">
-        FOTOS AURA
-    </div>
+<div class="titulo">
+    FOTOS AURA
+</div>
 
-    <!-- Imagem principal -->
-    <div class="principal">
-        <img src="Aura22.jpg" alt="Aura22">
-    </div>
+<div class="galeria">
+    <img src="Aura22.jpg" onclick="abrirModal(this.src)">
+    <img src="Imagem2.jpg" onclick="abrirModal(this.src)">
+    <img src="Imagem3.jpg" onclick="abrirModal(this.src)">
+    <img src="Imagem4.jpg" onclick="abrirModal(this.src)">
+    <img src="Imagem5.jpg" onclick="abrirModal(this.src)">
+</div>
 
-    <!-- +4 Imagens -->
-    <div class="galeria">
-        <img src="Imagem2.jpg" alt="Imagem 2">
-        <img src="Imagem3.jpg" alt="Imagem 3">
-        <img src="Imagem4.jpg" alt="Imagem 4">
-        <img src="Imagem5.jpg" alt="Imagem 5">
-    </div>
+<!-- Modal -->
+<div id="meuModal" class="modal" onclick="fecharModal()">
+    <img id="imagemModal">
+</div>
+
+<script>
+function abrirModal(src) {
+    document.getElementById("meuModal").style.display = "block";
+    document.getElementById("imagemModal").src = src;
+}
+
+function fecharModal() {
+    document.getElementById("meuModal").style.display = "none";
+}
+</script>
 
 </body>
 </html>
